@@ -615,26 +615,55 @@ plot (perf, lwd =2, col="red")
 
 ## ## ## ## ## ## ##
 ##### K-means #####
-# Requires Standardization
+#How to do a K means question
+df= read.csv("hdb-2012-to-2014.csv")
+df2 = df[,c("resale_price","floor_area_sqm")]
 
-kout = kmeans(hdb[,c("floor_area_sqm","amenities")],centers=2)
+standardized.X = scale(df2) 
 
+#Choosing number of cluster options
+K = 10 
+wss <- numeric(K)
+for (k in 1:K) { 
+  wss[k] <- sum(kmeans(standardized.X,centers=k)$withinss)
+}
+
+#Plot Inertia Graph
+plot(1:K, wss, col = "red", type="b", xlab="Number of Clusters",  ylab="Within Sum of Squares")
+
+#Assume optimal K is 3
+attach(df)
+kout = kmeans(standardized.X,centers=3)
+
+#Plot all the points in black
+plot(resale_price,floor_area_sqm, pch = 2, col = "black")
+
+#Assigning each point to a cluster
+df$clusters = kout$cluster
+
+#Colouring each point in each cluster
+points(resale_price[clusters==1],floor_area_sqm[clusters==1],pch = 2, col = "blue") 
+points(resale_price[clusters==2],floor_area_sqm[clusters==2],pch = 20, col = "red") 
+points(resale_price[clusters==3],floor_area_sqm[clusters==3],pch = 20, col = "green") 
+
+#Add legend
+legend("bottomright",legend=c("Cluster 1", "Cluster 2", "Cluster 3"),col=c("blue", "red", "green"), pch=c(2,20,20))
+
+#Getting the points of the Cluster centres
+data = data.frame(kout$centers)
+
+#Plotting them on the same graph, using par(new=TRUE)
+par(new=TRUE)
+plot(data$resale_price,data$floor_area_sqm, add=TRUE, pch=20, col='black')
+
+#Getting the size of each respective cluster
+kout$size
 # kmeans attributes
 kout$cluster # A vector of integers (from 1:k) indicating the cluster to which each point is allocated.
 kout$centers # A matrix of cluster centres.
 kout$size # The number of points in each cluster.
 kout$withinss # Vector of SS_k, one value per cluster
 kout$tot.withinss # Total within-cluster sum of squares = WSS
-
-# PLOT TO SEE HOW WSS CHANGES WHEN K CHANGES (Note scaling of DF fed to model)
-K = 10 
-wss <- numeric(K)
-for (k in 1:K) { 
-  wss[k] <- sum(kmeans(scale(hdb[,c("floor_area_sqm","amenities")]),centers=k)$withinss )
-}
-plot(1:K, wss, col = "red", type="b", xlab="Number of Clusters",  ylab="Within Sum of Squares")
-
-
 ## ## ## ## ## ## ##
 ##### Association Rules #####
 
