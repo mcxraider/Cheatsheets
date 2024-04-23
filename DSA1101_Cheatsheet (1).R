@@ -227,11 +227,15 @@ prop.table(table(Churned))
 ## ## ## ## ## ## ##
 ##### Train-Test Split #####
 # (with standardisaton)
+#specify df2 properly
+standardized.X = scale(df2) 
+
 test = sample(1:length(Purchase), 1000); test # sample a random set of 1000 indexes, from 1:n.
 train.X = standardized.X[-test,] #training set
 test.X = standardized.X[test,] # test set
 train.Y = caravan$Purchase[-test] # response for training set
 test.Y = caravan$Purchase[test]
+
 
 # (with even split)
 iris = read.csv("iris.csv", header=TRUE)
@@ -336,34 +340,97 @@ CalculateEuclideanDistance = function(vect1, vect2){
 }
    
 
+######## K Nearest Neighbours ##########
+# Scale only the numeric_features <- c("age", "bmi", "HbA1c_level", "blood_glucose_level")
+df_scaled = df[,-ncol(df)]
+numeric_features <- c("")
 
-library(class)
-knn.pred = knn(train.X, test.X, train.Y, k=1)
-confusion.matrix=table(test.Y, knn.pred)
-##            Pred
-##            0    1
-## Actual  0
-##         1
+df_scaled[numeric_features] <- scale(df_scaled[numeric_features])
 
-#Formula for getting precision:
-precision = confusion.matrix[2,2]/sum(confusion.matrix[,2])
+# Prepare data
+X = df_scaled[,-ncol(df_scaled)]
+Y = df[,ncol(df)-1]
+Y = as.factor(Y)
 
-
-# Type 1 error:
-# False positive (Actual negative, predicted positive)
-
-# Type 2 error:
-# False Negative (Actual positive, predicted negative)
+n_folds <- 5
+#Get indices for K fold
 
 
-# Prepare data (response variable split from input variables)
-X=df_2[,c("age", "node")] 
-Y=df_2[,c("survival.status")]
+#choosing number of nearest neighbours (K)
+num_ks <- 10
+k = c(1:num_ks)
 
+#Initialize vectors to store results 
+knn_aucs <- numeric(num_ks)
+knn_accuracies = numeric(num_ks)
+#Carrying out hyperparameter tuning
+for (i in k) {
+  knn_auc_folds <- numeric(n_folds)
+  knn_accuracy_folds = numeric(n_folds)
 
-# N-fold, varying k param 
-n_folds=3
-folds_j <- sample(rep(1:n_folds, length.out = length(age)))
+    for (j in 1:n_folds) {
+    train_indices <- which(df_scaled$stratified_fold != j)
+    test_indices <- which(df_scaled$stratified_fold == j)  # Remaining data for training
+    #Creating knn model
+    pred <- knn(train = X[train_indices, ], test = X[test_indices, ], cl = Y[train_indices], k = i)
+    #making predictions
+    test_data = Y[test_indices]
+    confusion_matrix=table(pred, test_data)
+    knn_accuracy_folds[j] = accuracy(confusion_matrix)  
+    
+    pred_numeric <- as.numeric(pred) -1 
+    true_numeric <- as.numeric(df_scaled$response[test_indices])
+    #Creating prediction object for ROCR
+    pred <- prediction(pred_numeric, true_numeric)
+    perf = performance(pred, "tpr", "fpr")
+    knn_auc_folds[j] <- performance(pred, "auc")@y.values[[1]]
+  }
+  knn_accuracies[i] = mean(knn_accuracy_folds)
+  # Calculate the mean AUC across all folds for the current value of k
+  knn_aucs[i] <- mean(knn_auc_folds)
+}
+
+max_accuracy <- max(knn_accuracies); max_accuracy
+#Best mean kNN accuracy is 
+
+max_auc <- max(knn_aucs); max_auc
+#Best mean kNN AUC is 
+
+best_k_acc_index <- which.max(knn_accuracies)
+best_k_auc_index <- which.max(knn_aucs)
+
+best_k_acc <- k[best_k_acc_index]; best_k_acc
+#Best k for accuracy is 
+
+best_k_auc <- k[best_k_auc_index]; best_k_auc
+#Best k for AUC is 
+
+#Plot new blank graph
+plot(NA, xlim=c(0,1), ylim=c(0,1), 
+     xlab="False Positive Rate", ylab="True Positive Rate", 
+     main="kNN ROC Curve")
+
+#Add ROC curves for each fold with the best k
+for (j in 1:n_folds) {
+  train_indices <- which(df_scaled$stratified_fold != j)
+  test_indices <- which(df_scaled$stratified_fold == j)  # Remaining data for training
+  
+  pred <- knn(train = X[train_indices, ], test = X[test_indices, ], cl = Y[train_indices], k = best_k_auc)
+  
+  pred_numeric <- as.numeric(pred) -1 
+  true_numeric <- as.numeric(df_scaled$response[test_indices])
+  
+  pred <- prediction(pred_numeric, true_numeric)
+  perf = performance(pred, "tpr", "fpr")
+  plot(perf, add = TRUE, col = 'blue')
+}
+
+#Plot average AUC values against k 
+k_values = seq(1:num_ks)
+plot(k_values, knn_aucs, type='b', col="red", pch=19, xlab="K", ylab="Average AUC", main="Average AUC vs k neighbours")
+
+#Plot average accuracy values against k 
+plot(k_values, knn_accuracies, type='b', col="red", pch=19, xlab="K", ylab="Average accuracy", main="Average Accuracy vs k neighbours")
 
 # init zero vectors to store values for whole run
 ave.type1 = numeric(50)
@@ -386,26 +453,10 @@ for (i in 1:50) {
 }
 
 
-
-# Code for finding AUC for each fold
-auc_folds=numeric(n_folds)
-for (j in 1:n_folds) {
-  test_j <- which(folds_j == j) # get the index of the points that will be in the test set
-  pred <- knn(train=X[ -test_j, ], test=X[test_j, ], cl=Y[-test_j ], k=1)
-  
-  pred= as.numeric(paste(pred))
-  pred_dt = prediction(pred, market$dir[test_j])
-  auc_folds[j] = performance(pred_dt , measure ="auc")@y.values[[1]]
-  
-}
-
-
-
 # Accuracy of a confusion matrix
 accuracy <- function(matrix){
   return (sum(diag(matrix))/sum(matrix));
 }
-
 
 
 # Precision of a confusion matrix
@@ -443,8 +494,6 @@ standard.new
 
 ## ## ## ## ## ## ##
 ##### Decision Trees, tree plot & N-fold (see misclass count version from tut 7) #####
-#install.packages('rpart.plot')
-
 library("rpart") # load libraries
 library("rpart.plot")
 tree <- rpart(Play ~ Outlook + Temperature + Humidity + Wind,
@@ -534,6 +583,67 @@ gini <- function(p){
   return (2*p*(1-p))
 }
 
+######## Decision Tree (with Hyperparameter Tuning) #########
+#Create vector of hyperparameters (cp)
+k = c(-7:-1)
+cp = 10^k
+
+#Initialize vectors to store results
+dt_aucs = numeric(length(cp))
+dt_accuracies = numeric(length(cp))
+
+#Carrying out hyperparameter tuning
+for (i in 1:length(cp)) {
+  dt_auc_folds=numeric(n_folds)
+  dt_accuracy_folds = numeric(n_folds)
+  
+  for (j in 1:n_folds) {
+    train_indices <- which(df$stratified_fold != j)
+    test_indices <- which(df$stratified_fold == j)
+    
+ 
+    tree <- rpart(response ~ .,
+                  method="class",
+                  data=df[train_indices, ],
+                  control=rpart.control(cp=cp[i]), # or max_depth
+                  parms=list(split='information'))
+    
+    #Make predictions
+    test_data <- df[test_indices, ]
+    pred = predict(tree, newdata=test_data, type='class')
+    confusion_matrix=table(pred, test_data$response)
+    dt_accuracy_folds[j] = accuracy(confusion_matrix)
+    
+    pred_probs = predict(tree, newdata=test_data, type='prob')
+    
+    pred_probs <- pred_probs[,2] 
+    #Creating prediction object for ROCR
+    pred_rocr = prediction(predictions=pred_probs, labels=df$response[test_indices])
+    perf = performance(pred_rocr , "tpr", "fpr")
+    dt_auc_folds[j] = as.numeric(performance(pred_rocr, "auc")@y.values[[1]])
+  }
+  #Finding mean accuracy for folds of each cp
+  mean_accuracy = mean(dt_accuracy_folds)
+  dt_accuracies[i] = mean_accuracy
+  mean_auc = mean(dt_auc_folds)
+  # Save the best AUC from each fold
+  dt_aucs[i] = mean_auc
+}
+
+max_accuracy <- max(dt_accuracies); max_accuracy
+max_auc <- max(dt_aucs); max_auc
+
+#Best Decision Tree accuracy is 
+#Best Decision Tree AUC is 
+
+best_cp_acc_index <- which.max(dt_accuracies)
+best_cp_auc_index <- which.max(dt_aucs)
+
+best_cp_acc <- cp[best_cp_acc_index]; best_cp_acc
+#Best cp for Accuracy is 
+
+best_cp_auc <- cp[best_cp_auc_index]; best_cp_auc
+#Best cp for AUC is 
 
 
 ##### Naive Bayes (see tut 8 for manual calculation) and ROC, AUC #####
@@ -584,6 +694,46 @@ auc <- performance(pred , "auc")@y.values[[1]]
 auc # 0.7164944
 
 
+for (j in 1:n_folds) {
+  train_indices <- which(df$stratified_fold != j)
+  test_indices <- which(df$stratified_fold == j)
+  nb_model <- naiveBayes(response ~ .,
+                         data=df[train_indices, ])
+  
+  test_data <- df[test_indices, ]
+  
+  # Predict using nb_model
+  pred_probs = predict(nb_model, newdata=test_data, type='raw')
+  pred_positive_probs = pred_probs[,2]
+  
+  # Convert probabilities to binary outcomes for confusion matrix
+  pred_class = ifelse(pred_positive_probs > 0.5, 1, 0)
+  
+  # Create confusion matrix using actual outcomes and predicted classes
+  confusion_matrix = table(Predicted=pred_class, Actual=df$diabetes[test_indices])
+  
+  # Calculate accuracy
+  nb_accuracy_folds[j] = accuracy(confusion_matrix)
+  
+  # AUC calculation
+  pred_obj = prediction(pred_positive_probs, df$diabetes[test_indices])
+  perf = performance(pred_obj, "tpr", "fpr")
+  nb_auc_folds[j] = performance(pred_obj, measure ="auc")@y.values[[1]]
+  
+  #Get plots for ROC Curve
+  plot(perf, col="red", main="Naive Bayes ROC Curve")
+  abline(a=0, b=1, lty=2)
+  par(new=TRUE)
+}
+# Get mean accuracy of NB model
+nb_accuracy = mean(nb_accuracy_folds); nb_accuracy
+#Best accuracy of NB model is 
+
+# Get AUC value of NB model
+nb_auc = mean(nb_auc_folds); nb_auc
+#Best AUC for NB Model is 
+
+
 ## ## ## ## ## ## ##
 ##### Logistic Regression #####
 
@@ -613,7 +763,46 @@ pred <- prediction(glm_pred , Surv)
 perf <- performance(pred , "tpr", "fpr")
 plot (perf, lwd =2, col="red")
 
+#Carry out 5 fold CV for Log regression
+for (j in 1:n_folds) {
+  train_indices = which(df$stratified_fold != j)
+  test_indices = which(df$stratified_fold == j)
+  
+  # Define lr model
+  lr_model = glm(response ~ .,
+                 data=df[train_indices, ],
+                 family=binomial(link="logit"))
+  
+  # Make predictions
+  test_data = df[test_indices, ]
+  pred = predict(lr_model, newdata=test_data)
+  pred = ifelse(pred>=0, 1, 0)
+  confusion_matrix=table(pred, test_data$response)
+  lr_accuracy_folds[j] = accuracy(confusion_matrix)
+  
+  pred_probs = predict(lr_model, newdata=test_data, type='response') 
+  
+  # Creating a prediction object for ROCR
+  pred = prediction(pred_probs, df$diabetes[test_indices])
+  perf = performance(pred , "tpr", "fpr")
+  
+  #Plot ROC curve into existing graph
+  plot(perf, add = TRUE, col = 'orange')
+  lr_auc_folds[j] = performance(pred , measure ="auc")@y.values[[1]]
+}
+# Get mean accuracy of LR model
+lr_accuracy = mean(lr_accuracy_folds); lr_accuracy
+# Mean Logistic Regression accuracy is 
+
+# Get AUC value of LR model
+lr_auc = mean(lr_auc_folds); lr_auc
+# Mean Logistic Regression AUC is 
 ## ## ## ## ## ## ##
+
+
+
+
+
 ##### K-means #####
 #How to do a K means question
 df= read.csv("hdb-2012-to-2014.csv")
@@ -658,6 +847,7 @@ plot(data$resale_price,data$floor_area_sqm, add=TRUE, pch=20, col='black')
 
 #Getting the size of each respective cluster
 kout$size
+
 # kmeans attributes
 kout$cluster # A vector of integers (from 1:k) indicating the cluster to which each point is allocated.
 kout$centers # A matrix of cluster centres.

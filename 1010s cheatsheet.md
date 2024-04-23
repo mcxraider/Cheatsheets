@@ -1,3 +1,11 @@
+
+Qn1s to take note:
+apr18 - 1B
+apr18 - 1c
+
+
+
+
 a = [1, 2, [3, 4]]
 b = a.copy()
 a[0] = 5 a[2][0] = 6 
@@ -78,6 +86,66 @@ print(d)
 Moral of story: you shouldn't add or remove keys during iteration. dictionary cannot change size during iteration
 
 ---
+
+Qn 1: Watch out for None returns if there is no return clause for the function
+
+---
+
+It is possible to have 2 returns to error calls
+
+def bar(x):
+    try:
+        return x * 2
+    except TypeError:
+        return 'type'
+    except ValueError:
+        return 'value'
+    except Exception:
+        return 'except
+
+
+print(bar(bar(bar)))
+>>"typetype"
+
+---
+
+Doing 3 different sorts on same iterable:
+function returns a tuple of pairs (level,count), where the entries are sorted first in descending order
+by count, then in ascending order for the achievement level for each count. 
+Sample result:
+>>> ((4, 3), (1, 2), (7, 2), (8, 2), (5, 1), (6, 1))
+
+def score_distribution(table):
+   results = list(table.items())
+   results.sort()
+   results.sort(reverse=True, key=lambda x:x[1])
+   return tuple(results)
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
