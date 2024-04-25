@@ -71,6 +71,12 @@ def transpose(matrix):
 
 ---
 
+Rotating a matrix 90 degrees, for nxn and nxm
+
+
+
+---
+
 Sometimes its easier to convert the datatype to something else so that u can manipulate it easily. But remember to convert it back.
 
 ---
@@ -109,7 +115,7 @@ print(bar(bar(bar)))
 
 ---
 
-Doing 3 different sorts on same iterable:
+Doing 2 different sorts on same iterable:
 function returns a tuple of pairs (level,count), where the entries are sorted first in descending order
 by count, then in ascending order for the achievement level for each count. 
 Sample result:
@@ -123,10 +129,8 @@ def score_distribution(table):
 
 ---
 
-
-
-
-
+Mutable - shade
+Imutable - No shade
 
 
 

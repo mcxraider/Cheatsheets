@@ -1,15 +1,23 @@
 
 ## ## ## ## ## ## ##
+#Packages:
+library(class)
+library(ROCR)
+library(e1071)
+library("rpart") 
+library("rpart.plot")
+library('arules') # arules has its own dataset type (sparse dataset) row and cols switch
+library('arulesViz')
 ##### Common Funcs #####
 set.seed()
-setwd("/Users/Spare/Desktop/DSA1101")
+setwd("/Users/Spare/Downloads")
 df= read.csv("Titanic.csv")
 head(df)
 dim(df)
 
 
 #Read text file
-df1 = read.table("data1.txt", header=TRUE, sep="\t")
+df1 = read.table("data1.txt", header=TRUE, sep="\t") #Try without \t if doenst work
 head(df1)
 
 #Get names of col in dataset
@@ -164,7 +172,8 @@ cor(total, order) #0.75
 
 # SCATTER PLOT
 plot(order,total, pch = 20, col = "darkblue")
-# Comments: The variability of the total is NOT STABLE when order changes, the plot has a {kind of shape}.
+# Comments: There is a positive relationship; might be linear
+#The variability of the total is NOT STABLE when order changes, the plot has a {kind of shape}.
 # BOX PLOTS OF MULTIPLE GROUP
 boxplot(total ~ sales$gender, col = "blue")
 
@@ -175,7 +184,7 @@ plot(order,total, type = "n") # a scatter plot with no point added
 # This is to color the points (like using hue in seaborn)
 points(order[gender=="M"],total[gender=="M"],pch = 2, col = "blue") # MALE
 points(order[gender=="F"],total[gender=="F"],pch = 20, col = "red") # FEMALE
-legend(1,7500,legend=c("Female", "Male"),col=c("red", "blue"), pch=c(20,2))
+legend("bottomright",legend=c("Female", "Male"),col=c("red", "blue"), pch=c(20,2))
 # (x = 1, y =7500) tells R the place where you want to put the legend box in the plot
 # do note on the size of the points since the points added latter will overlay on the points added earlier
 # hence, the points added latter should be chosen with smaller size so that they will not cover the points earlier
@@ -288,7 +297,7 @@ summary(M1)
 
 
 ## Interpreting Coefficients:
-Given that this is the model summary:
+#Given that this is the model summary:
 #Estimate Std. Error z value Pr(>|z|)    
 #(Intercept)   2.0438     0.1679  12.171  < 2e-16 ***
 #  Class2nd     -1.0181     0.1960  -5.194 2.05e-07 ***
@@ -855,11 +864,15 @@ kout$size # The number of points in each cluster.
 kout$withinss # Vector of SS_k, one value per cluster
 kout$tot.withinss # Total within-cluster sum of squares = WSS
 ## ## ## ## ## ## ##
+
+
 ##### Association Rules #####
 
 library('arules') # arules has its own dataset type (sparse dataset) row and cols switch
 library('arulesViz')
 
+#Loading dataset from arules package
+data(Groceries)
 
 #View first 10 transactions
 inspect(head(Groceries, 10))
