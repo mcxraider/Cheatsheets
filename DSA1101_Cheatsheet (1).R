@@ -11,24 +11,37 @@ library('arulesViz')
 ##### Common Funcs #####
 set.seed()
 setwd("/Users/Spare/Downloads")
-df= read.csv("Titanic.csv")
-head(df)
-dim(df)
+data= read.csv("German_credit.csv")
+head(data)
+dim(data)
+str(data)
+
+#If X has categories by words (like Yes/No or Child/Adult) then there is NO need to use as.factor(X)
+#since R will automatically know that X is categorical.
+#If X is categorical but its categories are numeric like 1/2/3, then you should use as.factor(X) to
+#declare with R that X is a categorical variable.
 
 
 #Read text file
-df1 = read.table("data1.txt", header=TRUE, sep="\t") #Try without \t if doenst work
-head(df1)
+data = read.table("data1.txt", header=TRUE, sep="\t") #Try without \t if doenst work
+head(data)
 
 #Get names of col in dataset
-names(df)
+names(data)
+
+#Drop columns
+drops <- c("balance", "day", "campaign", "pdays", "previous", "month")
+banktrain <- banktrain [,!(names(banktrain) %in% drops )]
 
 #proportion table
 prop.table(table({variable))
 
 
 #Change indexes of data in dataset
-
+# New row names
+new_row_names <- c("row1", "row2", "row3")
+# Change row names
+rownames(df) <- new_row_names
 #Change names of columns in dataset
 names(data) = c('Status', 'X1', 'X2', 'X3', 'X4')
 
@@ -96,8 +109,8 @@ sur = as.factor(sur)
 titanic$sur = sur ; head(titanic)
 
 # Logarithms in R
-e(1) # for e^1
-e(2) # for e^2
+exp(1) # for e^1
+exp(2) # for e^2
 log()
 eulers = 2.71828
 
@@ -264,7 +277,6 @@ to_predict = data.frame(rbind(t1[test_j,], t2[test_j,], t3[test_j,]))
 
 ## ## ## ## ## ## ##
 ##### Linear Regression #####
-
 # Manual Linear Regression function
 simple <- function(x , y) {
   beta_1 <- (sum(x*y)- mean (y)* sum (x ))/( sum(x^2)- mean(x)* sum(x))
@@ -272,14 +284,37 @@ simple <- function(x , y) {
   return(c( beta_0 , beta_1)) 
   }
 
-
 M1 = lm(y ~ x+NW, data)
 summary(M1)
 
-#How to write fitted model:
-# y-hat = Intercept - 1.2*I(sex=Infant) - 0.18*I(Sex=Male) - 0.052 * length + .......
+#yhat = 
+##      2.0438 -1.0181 I(Class = 2nd) -1.7778*I(Class = 3nd) 
+##      -0.8577*I(Class = Crew) -2.4201*I(Sex = Male) 
+##      +1.0615*I(Age = Child)
+# yhat represents the predicted value of the dependent variable based on the values of the predictor variables (Class, Sex, and Age in this case)
 
-#A variable is significanat if their p value is small
+##### INTERPRETATION OF Sex=Male COEFFICIENT
+#Coefficient for I(Sex=Male) = -2.4201
+#When an individual's gender is male (compared to female, which is the reference category), 
+#the predicted value of the {response variable} decreases by 2.4201 units.
+
+#or 
+
+# yhat = 
+#      -15257.514 + 77.985*size + 30569.087*NW
+##### INTERPRETATION OF COEFFICIENT
+#Coeff of NW in M2 is 30569.087
+#This means that for every one-unit increase in NW, 
+#the predicted value of price is expected to increase by $30,569.087, 
+#holding all other variables (such as size) constant.
+#A variable is significant if their p value is small
+
+#QN: What is R squared?
+# R^2measures the proportion of variability in the dependent variable that is explained by the independent variables in the model.
+# It provides insight into how well the model fits the data and the strength of the relationship between the variables.
+# An R^2 value of 0 indicates that none of the variability in the dependent variable is explained by the independent variables, 
+# suggesting that the model does not provide any predictive value.
+
 
 #QN: Is model significant?
 #The fitted model, M, has F-test for the overall significance of the model with extremely small p-value. 
@@ -295,35 +330,14 @@ summary(M1)
 # x is Symmetric/ NOT Symmetric (Plot the histogram to find out if symmetric or not)
 # The variability of x is NOT STABLE/ STABLE when {other factor} increases
 
-
-## Interpreting Coefficients:
-#Given that this is the model summary:
-#Estimate Std. Error z value Pr(>|z|)    
-#(Intercept)   2.0438     0.1679  12.171  < 2e-16 ***
-#  Class2nd     -1.0181     0.1960  -5.194 2.05e-07 ***
-#  Class3rd     -1.7778     0.1716 -10.362  < 2e-16 ***
-#  ClassCrew    -0.8577     0.1573  -5.451 5.00e-08 ***
-#  SexMale      -2.4201     0.1404 -17.236  < 2e-16 ***
-#  AgeChild      1.0615     0.2440   4.350 1.36e-05 ***
-
-#Coefficient of Sex: FEMALE IS REFERENCE. MALE IS INDICATED BY INDICATOR.
-# coefficient is estimated = -2.4201. 
-# It means, given the same condition on the class and age,
-# when comparing to a female, the LOG-ODDS of survival for a male is less than by 2.42.
-# It means, the ODDS of survival of a male passenger will be less than that of a female by
-# e^2.42 = 11.25 TIMES.
-
-
-#Coefficient of Age "ADULT" IS CHOSEN AS REFERENCE. CATEGORY "CHILD" IS INDICATED BY AN INDICATOR.
-# coefficient is estimated = 1.0615.
-# It means, given the same condition on the class and gender,
-# when comparing to an adult, the LOG-ODDS of survival of a child is larger by 1.0615.
-# That means, the ODDS of survival of a child passenger is larger than that of an adult passenger by 
-# e^1.0615 = 2.89 TIMES.
-
-
 #Check number of fitted values n less than 0:
-length(which(M1$fitted<0) 
+length(which(M1$fitted<0))
+
+#Get RSS? RSE
+RSS <- sum((M$residuals) ^ 2)
+RSE = sqrt(RSS / (n - 2)) #Larger RSE indicates poorer regression fit.
+TSS <- sum((y - mean(y)) ^ 2)
+R2 <- 1 - RSS / TSS
 
 to_predict = data.frame(x= 4000, NW = "1")  # Put as string since declared as factor
 predict(model_2, to_predict)
@@ -336,6 +350,7 @@ predict(model_2, to_predict)
 #More Comments about R Squared:
 #The fitted Model 2 has R2 = 0.6352.
 #It means, Model 2 can explain 63.52% variance in the observed response.
+
 
 ## ## ## ## ## ## ##
 ##### KNN, Confusion Matrix & N-Fold #####
@@ -490,17 +505,6 @@ fpr <- function(matrix){
 }
 
 
-##Scale a new point with relevance to data
-new = data.frame(X1 = 83, X2 = 57, X3= 2, X4 = 3)
-standard = scale(rbind(data[,2:5], new) ) 
-# add the new point to the x-values of the whole data, then standardizing all
-
-
-standard.new = standard[90,] # x values of the new point after standardizing
-standard.new
-
-
-
 ## ## ## ## ## ## ##
 ##### Decision Trees, tree plot & N-fold (see misclass count version from tut 7) #####
 library("rpart") # load libraries
@@ -511,14 +515,28 @@ tree <- rpart(Play ~ Outlook + Temperature + Humidity + Wind,
              control=rpart.control(minsplit=1), # or max_depth
              parms=list(split='information')) # or gini
 rpart.plot(tree , type =4, extra =2, clip.right.labs = FALSE , varlen =0, faclen =0)
+# Varlen is the length of the feature name in the tree
+# faclen is the length of the factor (levels of the feature)
+
+
+
 
 newdata <- data.frame(Outlook="rainy", Temperature="mild",
                       Humidity="high", Wind=FALSE)
 
-predict(tree,newdata=newdata,type="prob")
-predict(tree,newdata=newdata,type="class")
+pred = predict(tree,newdata=newdata,type="prob")
+# if pred = "prob", then might need to convert the prediction to numeric form 
+# as.numeric(paste(pred))
 
-#Important features of the dataset are the ones included in the decision nodes
+pred = predict(tree,newdata=newdata,type="class")
+
+# Important features of the dataset are the ones included in the decision nodes
+# Increasing max depth will increase size of tree
+# Min split = 1 means that you will need at least one observation. 
+# Increasing min split will decrease size of tree
+
+
+
 
 # ROC, AUC
 score <- tree_pred[,c("Yes")] # score = tree_pred[,2] to return the second col in "raw" table
@@ -526,19 +544,25 @@ pred <- prediction(score , actual_class)
 perf <- performance(pred , "tpr", "fpr")
 plot (perf, lwd =2, col="black", add=TRUE)
 
+
 #Tutorial qn on how to stratify the train and test set such that equal amount of class in each set:
-n_folds=5 #
+iris = read.csv("iris.csv")
+head(iris)
+n <- nrow(iris)
+n_folds <- 5
+attach(iris)
+# Assign folds in a stratified manner
+iris$stratified_fold <- rep(NA, n)
+for (i in unique(iris$class)) {
+  indices <- which(iris$class == i)
+  iris$stratified_fold[indices] <- sample(rep(1:n_folds, length.out = length(indices)))
+}
 
-folds_j_1 <- sample(rep(1:n_folds, length.out = 50 ))  # for type 1 = setosa
-
-folds_j_2 <- sample(rep(1:n_folds, length.out = 50 ))  # for type 2 = versicolor
-
-folds_j_3 <- sample(rep(1:n_folds, length.out = 50 ))  # for type 2 = virginica
-
-
-table(folds_j_1)
-table(folds_j_2)
-table(folds_j_3)
+# Check proportions in each fold
+for (j in 1:n_folds) {
+  cat(sprintf("Proportions in fold %d:\n", j))
+  print(table(iris[iris$stratified_fold == j, "class"]) / sum(iris$stratified_fold == j))
+}
 
 data1 = iris[1:50,] # data for type 1 = setosa
 data2 = iris[51:100,] # data for type 2 = versicolor
@@ -546,11 +570,9 @@ data3 = iris[101:150,] # data for type 3 = virginica
 
 acc=numeric(n_folds)
 
-j= 1
-
 for (j in 1:n_folds) {
   
-  test1 <- which(folds_j_1 == j)
+  test1 <- which(iris$stratified_fold == j)
   test2 <- which(folds_j_2 == j)
   test3 <- which(folds_j_3 == j)
   
@@ -576,21 +598,6 @@ for (j in 1:n_folds) {
 }
 acc
 mean(acc)
-
-# Entropy of a purity
-entropy <- function(p){
-  if (p==0 | p==1){
-    return (0)
-  } else {
-    return (-(log2(p)*p+log2(1-p)*(1-p)))
-  }
-}
-
-
-# Gini index of a purity
-gini <- function(p){
-  return (2*p*(1-p))
-}
 
 ######## Decision Tree (with Hyperparameter Tuning) #########
 #Create vector of hyperparameters (cp)
@@ -763,14 +770,12 @@ summary(M2)
 ## for male is less than females by 2.42
 ## e^2.42 = 11.25 times
 
+# Coefficient of Alcohol = 0.1487, e^0.1487 = 1.1603
+# the odds that a country is a developed country increase by 1.16 unit per unit of alcohol consumption
+
+
 # predict type = c("link", "response", "terms")
 # link returns log-odds, repsonse returns probabilities, terms return log-odds and vals for each feature.
-
-# ROC
-glm_pred = predict(M2, type = 'response')
-pred <- prediction(glm_pred , Surv) 
-perf <- performance(pred , "tpr", "fpr")
-plot (perf, lwd =2, col="red")
 
 #Carry out 5 fold CV for Log regression
 for (j in 1:n_folds) {
@@ -915,7 +920,19 @@ plot(rules, measure = c("support", "confidence"), shading = "lift", col = "black
 
 
 # the top 5 rules sorted by LIFT
-inspect(head(sort(rules, by="lift"), 5))
+inspect(head(sort(rules, by="lift"), 5, decreasing=TRUE)) # or decreasing = False
+
+# the top 5 rules sorted by CONFIDENCE
+inspect(head(sort(rules, by="confidence"), 5))
+
+# the top 5 rules sorted by coverage
+inspect(head(sort(rules, by="coverage"), 5))
+
+# the top 5 rules sorted by count
+inspect(head(sort(rules, by="count"), 5))
+
+
+
 highLiftRules <- head(sort(rules, by="lift"), 5)
 #    lhs                                                        rhs              support     confidence coverage    lift     count
 #[1] {Instant food products, soda}                           => {hamburger meat} 0.001220132 0.6315789  0.001931876 18.99565 12   

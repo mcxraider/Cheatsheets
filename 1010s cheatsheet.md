@@ -2,18 +2,8 @@
 Qn1s to take note:
 apr18 - 1B
 apr18 - 1c
-
-
-
-
-a = [1, 2, [3, 4]]
-b = a.copy()
-a[0] = 5 a[2][0] = 6 
-print(a) 
-print(b)
->> [5, 2, [6, 4]]
->> [1, 2, [6, 4]]
-The inner bracket of [6,4] is what doesnt changes too. if something in [6,4] changes, it changes in b too
+nov21 - 1B
+Nov21 - 1E
 
 ---
 
@@ -24,56 +14,14 @@ This does not throw an index error. Slicing above the limit will just return the
 
 ---
 
-## Types of errors:
-
-- TypeError: Raised when an operation or function is applied to an object of an inappropriate type.
-- ValueError: Raised when a function receives an argument of the correct type but an inappropriate value.
-- NameError: Raised when a local or global name is not found. This can occur when a variable is used before it has been defined.
-- IndexError: Raised when a sequence subscript is out of range.
-- KeyError: Raised when a dictionary key is not found.
-- ZeroDivisionError: Raised when the second argument of a division or modulo operation is zero.
-- RecursionError: Raised when the interpreter detects that the maximum recursion depth is exceeded.
-- AttributeError: Raised when an attribute reference or assignment fails.
-
-
----
-
 print([4] * 0)
 multiplying list by 0 returns empty list
 >> []
-
-
----
-
-When evaluating string of lambdas evaluate left to right 
-
----
 
 Starting to index from outside a list just returns an empty list 
 a = [1,2,3]
 print(a[3:])
 >> []
-
----
-
-Transposing a matrix, works for nxn and nxm
-```
-def transpose(matrix):
-   transposed_matrix = []
-   for i in range(0,len(matrix[0]),1):
-       new_row = []
-       for j in range(0,len(matrix),1):
-          new_row.append(matrix[j][i])
-       transposed_matrix.append(new_row)
-   return transposed_matrix
-
-```
-
----
-
-Rotating a matrix 90 degrees, for nxn and nxm
-
-
 
 ---
 
@@ -88,7 +36,6 @@ d = {1:2, 3:4, 5:6}
 for k, v in d.items():
    d[v//2] = k 
 print(d)
-
 Moral of story: you shouldn't add or remove keys during iteration. dictionary cannot change size during iteration
 
 ---
@@ -113,51 +60,73 @@ def bar(x):
 print(bar(bar(bar)))
 >>"typetype"
 
----
-
-Doing 2 different sorts on same iterable:
-function returns a tuple of pairs (level,count), where the entries are sorted first in descending order
-by count, then in ascending order for the achievement level for each count. 
-Sample result:
->>> ((4, 3), (1, 2), (7, 2), (8, 2), (5, 1), (6, 1))
-
-def score_distribution(table):
-   results = list(table.items())
-   results.sort()
-   results.sort(reverse=True, key=lambda x:x[1])
-   return tuple(results)
 
 ---
 
-Mutable - shade
-Imutable - No shade
+If something is continually being printed forever, write 
+"inifinite {That something being printed}"
+
+
+lst1 = [1, 2, 3, 4]
+lst2 = [5, 6, 7, 8]
+for i in lst1:
+   lst2.append(i)
+   lst1.remove(i) 
+print(lst1)
+print(lst2)
+
+Ans is [2,4] and [5,6,7,8,1,3]
+
+Thus, the element 2 is skipped because after the removal of 1 from lst1, the list structure changes and the iteration index moves forward to the next index, which now points to the number 3 instead of 2.
+
+---
+
+def sherlock(*args*):
+    try:
+        print("Deduction: " + args[1] + args[-1])
+    except ZeroDivisionError:
+        print("It is")
+    except TypeError: 
+        print("elementary")
+    except Exception:
+        print("my dear")
+    except IndexError: 
+        print("Watson")
+    finally:
+        return (args[0],)
+
+print(sherlock("holmes"))
+If the except Exception comes before the actual error raised, then that clause will run
+>>> my dear
+>>>("holmes",)
+
+---
+
+def test(x): 
+   try:
+      return x[0] / x[1] 
+   except ZeroDivisionError:
+      print("Zero!") 
+   except IndexError:
+      print("Index!") 
+   finally:
+      return x[1] / x[0] 
+print(test((1, 0)))
+
+>> Zero!
+>> 0.0
+
+If only 1 divider, it will be 0.0
+
+---
+Revise:
+- Apr 19 dict qn
+- Apr 20 list qn
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Write in:
+- diff ways to create a dictionary
 
 
 
