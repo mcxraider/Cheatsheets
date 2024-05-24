@@ -1,3 +1,3 @@
 # 1010s-cheat
 
-fking better get A bro
+ better get A bro
