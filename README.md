@@ -7,4 +7,4 @@ DSA1101 Cheatsheet - Qn answers and important comments to write in the exam
 ### Extra Credits:
 - Ethan Wong
 
-Get your A for DSA1101!
+Get your A for DSA1101
